@@ -7,7 +7,6 @@ export class VehiclesService {
     constructor(private readonly prisma: PrismaService) { }
 
     async create(dto: CreateVehicleDto) {
-        // validate user exists (simple check)
         await this.prisma.user.findUniqueOrThrow({ where: { id: dto.userId } });
 
         return this.prisma.vehicle.create({ data: dto });

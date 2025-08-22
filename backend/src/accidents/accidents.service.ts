@@ -1,4 +1,3 @@
-// src/accidents/accidents.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAccidentDto } from './dto/create-accident.dto';

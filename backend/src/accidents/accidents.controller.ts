@@ -1,4 +1,3 @@
-// src/accidents/accidents.controller.ts
 import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { AccidentsService } from './accidents.service';
 import { CreateAccidentDto } from './dto/create-accident.dto';

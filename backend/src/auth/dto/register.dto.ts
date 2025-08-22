@@ -6,7 +6,7 @@ export class RegisterDto {
 
     @IsString()
     @MinLength(8)
-    password: string; // plain password (we'll hash)
+    password: string;
 
     @IsString()
     name: string;
