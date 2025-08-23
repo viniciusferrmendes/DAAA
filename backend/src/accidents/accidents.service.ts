@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAccidentDto } from './dto/create-accident.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AccidentsService {
@@ -22,6 +23,18 @@ export class AccidentsService {
                     }
                 }
             }
+        });
+    }
+
+    async createQrSession(accidentId: number) {
+        const token = randomBytes(16).toString('hex');
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        return this.prisma.qrSession.create({
+            data: {
+                accidentId,
+                token,
+                expiresAt,
+            },
         });
     }
 }
