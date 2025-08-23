@@ -71,4 +71,27 @@ export class AccidentsService {
 
         return accident;
     }
+
+    async findAllByUser(userId: number) {
+        return this.prisma.accident.findMany({
+            where: {
+                parties: {
+                    some: { userId }
+                }
+            },
+            include: { parties: true }
+        });
+    }
+
+    async findOneByUser(userId: number, id: number) {
+        return this.prisma.accident.findFirst({
+            where: {
+                id,
+                parties: {
+                    some: { userId }
+                }
+            },
+            include: { parties: true }
+        });
+    }
 }
