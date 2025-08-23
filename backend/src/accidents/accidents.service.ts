@@ -10,9 +10,11 @@ export class AccidentsService {
         return this.prisma.accident.create({
             data: {
                 status: 'draft',
+                createdBy: userId,
                 parties: {
                     create: {
                         role: 'A',
+                        userId: userId,
                         insured: {},
                         vehicle: {},
                         insurance: {},
@@ -22,5 +24,4 @@ export class AccidentsService {
             }
         });
     }
-
 }

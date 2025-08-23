@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,9 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/**
- * ===== Enums =====
- */
 enum AccidentStatus {
   draft
   awaiting_other_party
@@ -28,9 +23,6 @@ enum PartyRole {
   B
 }
 
-/**
- * ===== Core =====
- */
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
@@ -40,8 +32,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  vehicles  Vehicle[]
-  auditLogs AuditLog[]
+  vehicles      Vehicle[]
+  auditLogs     AuditLog[]
+  Accident      Accident[]
+  AccidentParty AccidentParty[]
 }
 
 model Vehicle {
@@ -58,33 +52,34 @@ model Vehicle {
   @@index([userId])
 }
 
-/**
- * ===== Accidents =====
- */
 model Accident {
   id              Int            @id @default(autoincrement())
   date            DateTime?
-  time            String? // optional if you prefer storing time separately
-  location        Json? // { place, country }
+  time            String?
+  location        Json?
   injuries        Boolean        @default(false)
-  materialDamages Json? // { otherVehicles: bool, otherObjects: bool }
-  witnesses       Json? // [{ name, address, phone }]
-  circumstances   Json? // { vehicleA: [int], vehicleB: [int] }
-  collisionPoint  Json? // { vehicleA: "...", vehicleB: "..." }
-  visibleDamages  Json? // { vehicleA: string, vehicleB: string }
+  materialDamages Json?
+  witnesses       Json?
+  circumstances   Json?
+  collisionPoint  Json?
+  visibleDamages  Json?
   sketchUrl       String?
-  observations    Json? // { vehicleA: string, vehicleB: string }
-  signatures      Json? // { vehicleA: string(url/base64), vehicleB: string }
+  observations    Json?
+  signatures      Json?
   status          AccidentStatus @default(draft)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  createdBy Int
+  creator   User @relation(fields: [createdBy], references: [id])
 
   parties    AccidentParty[]
   qrSessions QrSession[]
   auditLogs  AuditLog[]
 
   @@index([status])
+  @@index([createdBy])
 }
 
 model AccidentParty {
@@ -92,24 +87,24 @@ model AccidentParty {
   accidentId Int
   role       PartyRole
 
-  // Blocks stored as JSON for MVP agility; can be normalized later
-  insured   Json? // { lastName, firstName, address, zip, country, contact, taxId }
-  vehicle   Json? // { makeModel, plate, country, trailer? }
-  insurance Json? // { company, policy, greenCard, validFrom, validTo, agency: { ... }, coversMaterialDamage }
-  driver    Json? // { lastName, firstName, dob, address, zip, country, contact, licenseNo, category, validTo }
+  insured   Json?
+  vehicle   Json?
+  insurance Json?
+  driver    Json?
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   accident Accident @relation(fields: [accidentId], references: [id])
 
-  @@unique([accidentId, role]) // garante A e B únicos por acidente
+  @@unique([accidentId, role])
   @@index([accidentId])
+  @@index([userId])
 }
 
-/**
- * ===== QR Pairing =====
- */
 model QrSession {
   id         Int      @id @default(autoincrement())
   accidentId Int
@@ -125,16 +120,13 @@ model QrSession {
   @@index([expiresAt])
 }
 
-/**
- * ===== Audit =====
- */
 model AuditLog {
   id         Int        @id @default(autoincrement())
   accidentId Int?
   userId     Int?
   party      PartyRole?
-  action     String // e.g. "create", "update:partyA", "sign:A", "pdf:generate"
-  block      String? // e.g. "general", "partyA", "circumstances"
+  action     String
+  block      String?
   ip         String?
   geoLat     Float?
   geoLng     Float?
