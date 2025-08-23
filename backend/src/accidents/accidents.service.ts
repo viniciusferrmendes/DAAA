@@ -33,8 +33,42 @@ export class AccidentsService {
             data: {
                 accidentId,
                 token,
-                expiresAt,
-            },
+                expiresAt
+            }
         });
+    }
+
+    async joinAccident(userId: number, token: string) {
+        const session = await this.prisma.qrSession.findUnique({
+            where: { token }
+        });
+
+        if (!session || session.used || session.expiresAt < new Date()) {
+            throw new Error('Invalid or expired token');
+        }
+
+        const accident = await this.prisma.accident.update({
+            where: { id: session.accidentId },
+            data: {
+                parties: {
+                    create: {
+                        role: 'B',
+                        userId,
+                        insured: {},
+                        vehicle: {},
+                        insurance: {},
+                        driver: {}
+                    }
+                }
+            },
+            include: { parties: true }
+        });
+
+        await this.prisma.qrSession.update({
+            where: { id: session.id },
+            data: { used: true }
+        });
+
+        return accident;
     }
 }
