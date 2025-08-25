@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAccidentDto } from './dto/create-accident.dto';
 import { randomBytes } from 'crypto';
@@ -26,7 +26,19 @@ export class AccidentsService {
         });
     }
 
-    async createQrSession(accidentId: number) {
+    async createQrSession(userId: number, accidentId: number) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId },
+        });
+
+        if (!accident) {
+            throw new NotFoundException('Accident not found');
+        }
+
+        if (accident.createdBy !== userId) {
+            throw new ForbiddenException('Only Party A can generate QR sessions');
+        }
+
         const token = randomBytes(16).toString('hex');
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
         return this.prisma.qrSession.create({
@@ -40,36 +52,42 @@ export class AccidentsService {
 
     async joinAccident(userId: number, token: string) {
         const session = await this.prisma.qrSession.findUnique({
-            where: { token }
+            where: { token },
+            include: { accident: { include: { parties: true } } },
         });
 
         if (!session || session.used || session.expiresAt < new Date()) {
-            throw new Error('Invalid or expired token');
+            throw new BadRequestException('Invalid or expired token');
         }
 
-        const accident = await this.prisma.accident.update({
-            where: { id: session.accidentId },
-            data: {
-                parties: {
-                    create: {
-                        role: 'B',
-                        userId,
-                        insured: {},
-                        vehicle: {},
-                        insurance: {},
-                        driver: {}
-                    }
-                }
-            },
-            include: { parties: true }
-        });
+        const accident = session.accident;
+
+        if (!accident) {
+            throw new NotFoundException('Accident not found');
+        }
+
+        const hasPartyB = accident.parties.some(p => p.role === 'B');
+        if (hasPartyB) {
+            throw new BadRequestException('Accident already has Party B');
+        }
+
+        const isAlreadyParticipant = accident.parties.some(p => p.userId === userId);
+        if (isAlreadyParticipant) {
+            throw new BadRequestException('User is already part of this accident');
+        }
 
         await this.prisma.qrSession.update({
             where: { id: session.id },
-            data: { used: true }
+            data: { used: true },
         });
 
-        return accident;
+        return this.prisma.accidentParty.create({
+            data: {
+                accidentId: accident.id,
+                role: 'B',
+                userId,
+            },
+        });
     }
 
     async findAllByUser(userId: number) {

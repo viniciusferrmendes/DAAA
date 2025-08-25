@@ -17,15 +17,16 @@ export class AccidentsController {
 
     @UseGuards(JwtAuthGuard)
     @Post(':id/qrsessions')
-    createQr(@Param('id', ParseIntPipe) id: number) {
-        return this.accidentsService.createQrSession(id);
+    createQrSession(@Req() req, @Param('id') id: string) {
+        const userId = req.user.sub;
+        return this.accidentsService.createQrSession(userId, Number(id));
     }
 
     @UseGuards(JwtAuthGuard)
     @Post('join')
-    join(@Req() req, @Body() dto: JoinAccidentDto) {
+    joinAccident(@Req() req, @Body('token') token: string) {
         const userId = req.user.sub;
-        return this.accidentsService.joinAccident(userId, dto.token);
+        return this.accidentsService.joinAccident(userId, token);
     }
 
     @UseGuards(JwtAuthGuard)
