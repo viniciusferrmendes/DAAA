@@ -46,6 +46,11 @@ model Vehicle {
   country String
   year    Int
 
+  insuranceCompany   String?
+  insurancePolicyNum String?
+  insuranceStart     DateTime?
+  insuranceEnd       DateTime?
+
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
