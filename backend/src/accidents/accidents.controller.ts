@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body, UseGuards, Req, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Req, Param, ParseIntPipe, Patch } from '@nestjs/common';
 import { AccidentsService } from './accidents.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateAccidentDto } from './dto/create-accident.dto';
 import { JoinAccidentDto } from './dto/join-accident.dto';
+import { UpdateAccidentPartyADto } from './dto/update-accident-party-a.dto';
 
 @Controller('accidents')
 export class AccidentsController {
@@ -41,5 +42,16 @@ export class AccidentsController {
     findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
         const userId = req.user.sub;
         return this.accidentsService.findOneByUser(userId, id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch(':id/party/A')
+    updatePartyA(
+        @Req() req,
+        @Param('id') accidentId: string,
+        @Body() dto: UpdateAccidentPartyADto,
+    ) {
+        const userId = req.user.sub;
+        return this.accidentsService.updatePartyA(userId, +accidentId, dto);
     }
 }
