@@ -1,6 +1,9 @@
-import { IsOptional, IsString, IsDateString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsDateString, IsBoolean, IsNumber } from 'class-validator';
 
-export class UpdateAccidentPartyADto {
+export class UpdateAccidentPartyDto {
+    @IsOptional() @IsNumber()
+    vehicleId?: number;
+
     // insured
     @IsOptional() @IsString() surname?: string;
     @IsOptional() @IsString() name?: string;
@@ -10,7 +13,7 @@ export class UpdateAccidentPartyADto {
     @IsOptional() @IsString() contact?: string;
     @IsOptional() @IsString() nif?: string;
 
-    // vehicle
+    // vehicle manual
     @IsOptional() @IsString() brandModel?: string;
     @IsOptional() @IsString() plate?: string;
     @IsOptional() @IsString() vehicleCountry?: string;

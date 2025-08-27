@@ -3,7 +3,7 @@ import { AccidentsService } from './accidents.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateAccidentDto } from './dto/create-accident.dto';
 import { JoinAccidentDto } from './dto/join-accident.dto';
-import { UpdateAccidentPartyADto } from './dto/update-accident-party-a.dto';
+import { UpdateAccidentPartyDto } from './dto/update-accident-party.dto';
 
 @Controller('accidents')
 export class AccidentsController {
@@ -49,9 +49,20 @@ export class AccidentsController {
     updatePartyA(
         @Req() req,
         @Param('id') accidentId: string,
-        @Body() dto: UpdateAccidentPartyADto,
+        @Body() dto: UpdateAccidentPartyDto,
     ) {
         const userId = req.user.sub;
         return this.accidentsService.updatePartyA(userId, +accidentId, dto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch(':id/party/B')
+    updatePartyB(
+        @Req() req,
+        @Param('id') accidentId: string,
+        @Body() dto: UpdateAccidentPartyDto,
+    ) {
+        const userId = req.user.sub;
+        return this.accidentsService.updatePartyB(userId, +accidentId, dto);
     }
 }

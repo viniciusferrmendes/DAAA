@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAccidentDto } from './dto/create-accident.dto';
 import { randomBytes } from 'crypto';
-import { UpdateAccidentPartyADto } from './dto/update-accident-party-a.dto';
+import { UpdateAccidentPartyDto } from './dto/update-accident-party.dto';
 
 @Injectable()
 export class AccidentsService {
@@ -29,24 +29,26 @@ export class AccidentsService {
     async createQrSession(userId: number, accidentId: number) {
         const accident = await this.prisma.accident.findUnique({
             where: { id: accidentId },
+            include: { parties: true },
         });
 
-        if (!accident) {
-            throw new NotFoundException('Accident not found');
+        if (!accident) throw new NotFoundException('Accident not found');
+
+        const partyA = accident.parties.find(p => p.role === 'A');
+        if (!partyA || partyA.userId !== userId) {
+            throw new ForbiddenException('Only Party A can generate QR');
         }
 
-        if (accident.createdBy !== userId) {
-            throw new ForbiddenException('Only Party A can generate QR sessions');
-        }
-
-        const token = randomBytes(16).toString('hex');
+        const token = crypto.randomUUID();
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
         return this.prisma.qrSession.create({
             data: {
                 accidentId,
                 token,
-                expiresAt
-            }
+                expiresAt,
+                used: false,
+            },
         });
     }
 
@@ -113,7 +115,7 @@ export class AccidentsService {
         });
     }
 
-    async updatePartyA(userId: number, accidentId: number, dto: UpdateAccidentPartyADto) {
+    async updatePartyA(userId: number, accidentId: number, dto: UpdateAccidentPartyDto) {
         const accident = await this.prisma.accident.findUnique({
             where: { id: accidentId },
             include: { parties: true },
@@ -191,6 +193,89 @@ export class AccidentsService {
                     licenseNum: dto.driverLicenseNum ?? (partyA.driver as any)?.licenseNum,
                     licenseCategory: dto.driverLicenseCategory ?? (partyA.driver as any)?.licenseCategory,
                     licenseExpiry: dto.driverLicenseExpiry ?? (partyA.driver as any)?.licenseExpiry,
+                },
+            },
+        });
+    }
+
+    async updatePartyB(userId: number, accidentId: number, dto: UpdateAccidentPartyDto) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId },
+            include: { parties: true },
+        });
+
+        if (!accident) throw new NotFoundException('Accident not found');
+
+        const partyB = accident.parties.find(p => p.role === 'B');
+        if (!partyB) throw new NotFoundException('Party B not found');
+        if (partyB.userId !== userId) {
+            throw new ForbiddenException('You are not allowed to update Party B');
+        }
+
+        let vehicleData = (partyB.vehicle as any) || {};
+
+        if ((dto as any).vehicleId) {
+            const vehicle = await this.prisma.vehicle.findFirst({
+                where: { id: (dto as any).vehicleId, userId },
+            });
+            if (!vehicle) {
+                throw new ForbiddenException('Vehicle does not belong to you');
+            }
+            vehicleData = {
+                id: vehicle.id,
+                brandModel: vehicle.brand + ' ' + vehicle.model,
+                plate: vehicle.plate,
+                country: vehicle.country,
+                year: vehicle.year,
+                insuranceCompany: vehicle.insuranceCompany,
+                insurancePolicyNum: vehicle.insurancePolicyNum,
+                insuranceStart: vehicle.insuranceStart,
+                insuranceEnd: vehicle.insuranceEnd,
+            };
+        } else {
+            vehicleData = {
+                ...vehicleData,
+                brandModel: dto.brandModel ?? vehicleData.brandModel,
+                plate: dto.plate ?? vehicleData.plate,
+                country: dto.vehicleCountry ?? vehicleData.country,
+                trailer: dto.trailer ?? vehicleData.trailer,
+            };
+        }
+
+        return this.prisma.accidentParty.update({
+            where: { id: partyB.id },
+            data: {
+                insured: {
+                    ...((partyB.insured as any) || {}),
+                    surname: dto.surname ?? (partyB.insured as any)?.surname,
+                    name: dto.name ?? (partyB.insured as any)?.name,
+                    address: dto.address ?? (partyB.insured as any)?.address,
+                    postalCode: dto.postalCode ?? (partyB.insured as any)?.postalCode,
+                    country: dto.country ?? (partyB.insured as any)?.country,
+                    contact: dto.contact ?? (partyB.insured as any)?.contact,
+                    nif: dto.nif ?? (partyB.insured as any)?.nif,
+                },
+                vehicle: vehicleData,
+                insurance: {
+                    ...((partyB.insurance as any) || {}),
+                    company: dto.insuranceCompany ?? (partyB.insurance as any)?.company,
+                    policyNum: dto.insurancePolicyNum ?? (partyB.insurance as any)?.policyNum,
+                    greenCard: dto.greenCard ?? (partyB.insurance as any)?.greenCard,
+                    start: dto.insuranceStart ?? (partyB.insurance as any)?.start,
+                    end: dto.insuranceEnd ?? (partyB.insurance as any)?.end,
+                },
+                driver: {
+                    ...((partyB.driver as any) || {}),
+                    surname: dto.driverSurname ?? (partyB.driver as any)?.surname,
+                    name: dto.driverName ?? (partyB.driver as any)?.name,
+                    birth: dto.driverBirth ?? (partyB.driver as any)?.birth,
+                    address: dto.driverAddress ?? (partyB.driver as any)?.address,
+                    postalCode: dto.driverPostalCode ?? (partyB.driver as any)?.postalCode,
+                    country: dto.driverCountry ?? (partyB.driver as any)?.country,
+                    contact: dto.driverContact ?? (partyB.driver as any)?.contact,
+                    licenseNum: dto.driverLicenseNum ?? (partyB.driver as any)?.licenseNum,
+                    licenseCategory: dto.driverLicenseCategory ?? (partyB.driver as any)?.licenseCategory,
+                    licenseExpiry: dto.driverLicenseExpiry ?? (partyB.driver as any)?.licenseExpiry,
                 },
             },
         });
