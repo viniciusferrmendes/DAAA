@@ -1,10 +1,7 @@
-import { IsOptional, IsString, IsDateString, IsBoolean, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsDateString, IsBoolean, IsNumber, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class UpdateAccidentPartyDto {
-    @IsOptional() @IsNumber()
-    vehicleId?: number;
-
-    // insured
+class InsuredDto {
     @IsOptional() @IsString() surname?: string;
     @IsOptional() @IsString() name?: string;
     @IsOptional() @IsString() address?: string;
@@ -12,29 +9,49 @@ export class UpdateAccidentPartyDto {
     @IsOptional() @IsString() country?: string;
     @IsOptional() @IsString() contact?: string;
     @IsOptional() @IsString() nif?: string;
+}
 
-    // vehicle manual
+class VehicleDto {
     @IsOptional() @IsString() brandModel?: string;
     @IsOptional() @IsString() plate?: string;
-    @IsOptional() @IsString() vehicleCountry?: string;
+    @IsOptional() @IsString() country?: string;
     @IsOptional() @IsBoolean() trailer?: boolean;
+}
 
-    // insurance
+class InsuranceDto {
     @IsOptional() @IsString() insuranceCompany?: string;
     @IsOptional() @IsString() insurancePolicyNum?: string;
     @IsOptional() @IsString() greenCard?: string;
     @IsOptional() @IsDateString() insuranceStart?: string;
     @IsOptional() @IsDateString() insuranceEnd?: string;
+}
 
-    // driver
-    @IsOptional() @IsString() driverSurname?: string;
-    @IsOptional() @IsString() driverName?: string;
-    @IsOptional() @IsDateString() driverBirth?: string;
-    @IsOptional() @IsString() driverAddress?: string;
-    @IsOptional() @IsString() driverPostalCode?: string;
-    @IsOptional() @IsString() driverCountry?: string;
-    @IsOptional() @IsString() driverContact?: string;
-    @IsOptional() @IsString() driverLicenseNum?: string;
+class DriverDto {
+    @IsOptional() @IsString() surname?: string;
+    @IsOptional() @IsString() name?: string;
+    @IsOptional() @IsDateString() birth?: string;
+    @IsOptional() @IsString() address?: string;
+    @IsOptional() @IsString() postalCode?: string;
+    @IsOptional() @IsString() country?: string;
+    @IsOptional() @IsString() contact?: string;
+    @IsOptional() @IsString() licenseNum?: string;
     @IsOptional() @IsString() driverLicenseCategory?: string;
     @IsOptional() @IsDateString() driverLicenseExpiry?: string;
+}
+
+export class UpdateAccidentPartyDto {
+    @IsOptional() @IsNumber()
+    vehicleId?: number;
+
+    @IsOptional() @ValidateNested() @Type(() => InsuredDto)
+    insured?: InsuredDto;
+
+    @IsOptional() @ValidateNested() @Type(() => VehicleDto)
+    vehicle?: VehicleDto;
+
+    @IsOptional() @ValidateNested() @Type(() => InsuranceDto)
+    insurance?: InsuranceDto;
+
+    @IsOptional() @ValidateNested() @Type(() => DriverDto)
+    driver?: DriverDto;
 }

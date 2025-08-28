@@ -59,9 +59,11 @@ model Vehicle {
 
 model Accident {
   id              Int            @id @default(autoincrement())
-  date            DateTime?
-  time            String?
-  location        Json?
+  dateTime        DateTime?
+  address         String?
+  country         String?
+  geoLat          Float?
+  geoLng          Float?
   injuries        Boolean        @default(false)
   materialDamages Json?
   witnesses       Json?
