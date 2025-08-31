@@ -4,6 +4,7 @@ import { CreateAccidentDto } from './dto/create-accident.dto';
 import { randomBytes } from 'crypto';
 import { UpdateAccidentPartyDto } from './dto/update-accident-party.dto';
 import { UpdateAccidentGeneralDto } from './dto/update-accident-general.dto';
+import { UpdateCircumstancesDto } from './dto/update-circumstances.dto';
 
 @Injectable()
 export class AccidentsService {
@@ -199,6 +200,35 @@ export class AccidentsService {
                     ? { ...(party.driver as any), ...dto.driver }
                     : party.driver,
             },
+        });
+    }
+
+    async updateCircumstances(accidentId: number, userId: number, dto: UpdateCircumstancesDto,) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId },
+            include: { parties: true },
+        });
+
+        if (!accident) throw new NotFoundException('Accident not found');
+
+        const party = accident.parties.find((p) => p.userId === userId);
+        if (!party) throw new ForbiddenException('You are not part of this accident');
+
+        const current = (accident.circumstances ?? {}) as Record<string, any>;
+
+        let newCircumstances = { ...current };
+
+        if (party.role === 'A' && dto.vehicleA) {
+            newCircumstances.vehicleA = dto.vehicleA;
+        } else if (party.role === 'B' && dto.vehicleB) {
+            newCircumstances.vehicleB = dto.vehicleB;
+        } else {
+            throw new ForbiddenException('You can only update your own circumstances');
+        }
+
+        return this.prisma.accident.update({
+            where: { id: accidentId },
+            data: { circumstances: newCircumstances },
         });
     }
 }
