@@ -7,6 +7,7 @@ import { UpdateAccidentPartyDto } from './dto/update-accident-party.dto';
 import { UpdateAccidentGeneralDto } from './dto/update-accident-general.dto';
 import { UpdateCircumstancesDto } from './dto/update-circumstances.dto';
 import { UpdateCollisionPointDto } from './dto/update-collision-point.dto';
+import { UpdateWitnessesDto } from './dto/update-witnesses.dto';
 
 @Controller('accidents')
 export class AccidentsController {
@@ -90,5 +91,16 @@ export class AccidentsController {
     ) {
         const userId = req.user.sub;
         return this.accidentsService.updateCollisionPoint(+id, userId, dto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch(':id/witnesses')
+    updateWitnesses(
+        @Param('id') id: string,
+        @Req() req,
+        @Body() dto: UpdateWitnessesDto,
+    ) {
+        const userId = req.user.sub;
+        return this.accidentsService.updateWitnesses(+id, userId, dto);
     }
 }

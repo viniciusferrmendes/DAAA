@@ -6,6 +6,8 @@ import { UpdateAccidentPartyDto } from './dto/update-accident-party.dto';
 import { UpdateAccidentGeneralDto } from './dto/update-accident-general.dto';
 import { UpdateCircumstancesDto } from './dto/update-circumstances.dto';
 import { UpdateCollisionPointDto } from './dto/update-collision-point.dto';
+import { UpdateWitnessesDto } from './dto/update-witnesses.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AccidentsService {
@@ -262,6 +264,33 @@ export class AccidentsService {
         return this.prisma.accident.update({
             where: { id: accidentId },
             data: { collisionPoint: newCollisionPoint },
+        });
+    }
+
+    async updateWitnesses(
+        accidentId: number,
+        userId: number,
+        dto: UpdateWitnessesDto,
+    ) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId },
+        });
+        if (!accident) {
+            throw new NotFoundException('Accident not found');
+        }
+
+        const party = await this.prisma.accidentParty.findFirst({
+            where: { accidentId, userId },
+        });
+        if (!party) {
+            throw new ForbiddenException('You are not part of this accident');
+        }
+
+        return this.prisma.accident.update({
+            where: { id: accidentId },
+            data: {
+                witnesses: dto.witnesses as unknown as Prisma.InputJsonValue
+            }
         });
     }
 }
