@@ -1,4 +1,4 @@
-import { IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsOptional, IsString, ValidateNested, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class WitnessDto {
@@ -15,6 +15,7 @@ class WitnessDto {
 }
 
 export class UpdateWitnessesDto {
+    @IsArray()
     @ValidateNested({ each: true })
     @Type(() => WitnessDto)
     witnesses: WitnessDto[];

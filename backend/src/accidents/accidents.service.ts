@@ -287,11 +287,16 @@ export class AccidentsService {
             throw new ForbiddenException('You are not part of this accident');
         }
 
+        const updateData: Prisma.AccidentUpdateInput = {};
+        if (party.role === 'A') {
+            updateData.witnessesA = dto.witnesses as unknown as Prisma.InputJsonValue;
+        } else if (party.role === 'B') {
+            updateData.witnessesB = dto.witnesses as unknown as Prisma.InputJsonValue;
+        }
+
         return this.prisma.accident.update({
             where: { id: accidentId },
-            data: {
-                witnesses: dto.witnesses as unknown as Prisma.InputJsonValue
-            }
+            data: updateData,
         });
     }
 
