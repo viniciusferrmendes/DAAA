@@ -9,6 +9,7 @@ import { UpdateCollisionPointDto } from './dto/update-collision-point.dto';
 import { UpdateWitnessesDto } from './dto/update-witnesses.dto';
 import { Prisma } from '@prisma/client';
 import { UpdateObservationsDto } from './dto/update-observations.dto';
+import { SignAccidentDto } from './dto/sign-accident.dto';
 
 @Injectable()
 export class AccidentsService {
@@ -327,6 +328,57 @@ export class AccidentsService {
             data: {
                 observations: newObservations,
                 updatedAt: new Date(),
+            },
+        });
+    }
+
+    async signAccident(
+        accidentId: number,
+        userId: number,
+        dto: SignAccidentDto,
+    ) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId },
+            include: { parties: true },
+        });
+        if (!accident) throw new NotFoundException('Accident not found');
+
+        const party = accident.parties.find(p => p.userId === userId);
+        if (!party) throw new ForbiddenException('You are not part of this accident');
+
+
+        const data: any = {};
+        const currentSignatures = (accident.signatures as any) || {};
+
+        if (party.role === 'A') {
+            data.signatures = {
+                ...currentSignatures,
+                vehicleA: dto.signature,
+            };
+        } else {
+            data.signatures = {
+                ...currentSignatures,
+                vehicleB: dto.signature,
+            };
+        }
+
+        let newStatus = accident.status;
+
+        if (newStatus === 'draft' || newStatus === 'awaiting_other_party' || newStatus === 'both_in_draft') {
+            newStatus = 'ready_to_sign';
+        }
+
+        if (newStatus === 'ready_to_sign') {
+            newStatus = 'signed_by_one';
+        } else if (newStatus === 'signed_by_one') {
+            newStatus = 'signed_by_both';
+        }
+
+        return this.prisma.accident.update({
+            where: { id: accidentId },
+            data: {
+                signatures: data.signatures,
+                status: newStatus,
             },
         });
     }
