@@ -11,6 +11,7 @@ import { UpdateWitnessesDto } from './dto/update-witnesses.dto';
 import { UpdateObservationsDto } from './dto/update-observations.dto';
 import { SignAccidentDto } from './dto/sign-accident.dto';
 import { UpdateVisibleDamagesDto } from './dto/update-visible-damages.dto';
+import { UpdateSketchDto } from './dto/update-sketch.dto';
 
 @Controller('accidents')
 export class AccidentsController {
@@ -127,6 +128,17 @@ export class AccidentsController {
     ) {
         const userId = req.user.sub;
         return this.accidentsService.updateVisibleDamages(Number(id), userId, dto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch(':id/sketch')
+    async updateSketch(
+        @Param('id') id: string,
+        @Req() req,
+        @Body() dto: UpdateSketchDto,
+    ) {
+        const userId = req.user.sub;
+        return this.accidentsService.updateSketch(Number(id), userId, dto);
     }
 
     @UseGuards(JwtAuthGuard)

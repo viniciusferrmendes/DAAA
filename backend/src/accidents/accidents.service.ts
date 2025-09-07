@@ -11,6 +11,7 @@ import { Prisma } from '@prisma/client';
 import { UpdateObservationsDto } from './dto/update-observations.dto';
 import { SignAccidentDto } from './dto/sign-accident.dto';
 import { UpdateVisibleDamagesDto } from './dto/update-visible-damages.dto';
+import { UpdateSketchDto } from './dto/update-sketch.dto';
 
 @Injectable()
 export class AccidentsService {
@@ -333,6 +334,63 @@ export class AccidentsService {
         });
     }
 
+    async updateSketch(
+        accidentId: number,
+        userId: number,
+        dto: UpdateSketchDto,
+    ) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId },
+            include: { parties: true },
+        });
+        if (!accident) throw new NotFoundException('Accident not found');
+
+        const party = accident.parties.find(p => p.userId === userId);
+        if (!party) throw new ForbiddenException('You are not part of this accident');
+
+        return this.prisma.accident.update({
+            where: { id: accidentId },
+            data: {
+                sketchUrl: dto.sketchUrl,
+            },
+        });
+    }
+
+    async updateVisibleDamages(
+        accidentId: number,
+        userId: number,
+        dto: UpdateVisibleDamagesDto,
+    ) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId },
+            include: { parties: true },
+        });
+        if (!accident) throw new NotFoundException('Accident not found');
+
+        const party = accident.parties.find(p => p.userId === userId);
+        if (!party) throw new ForbiddenException('You are not part of this accident');
+
+        const currentDamages = (accident.visibleDamages as any) || {};
+
+        const data: any = {};
+        if (party.role === 'A') {
+            data.visibleDamages = {
+                ...currentDamages,
+                vehicleA: dto.vehicleA ?? currentDamages.vehicleA,
+            };
+        } else {
+            data.visibleDamages = {
+                ...currentDamages,
+                vehicleB: dto.vehicleB ?? currentDamages.vehicleB,
+            };
+        }
+
+        return this.prisma.accident.update({
+            where: { id: accidentId },
+            data,
+        });
+    }
+
     async signAccident(
         accidentId: number,
         userId: number,
@@ -381,41 +439,6 @@ export class AccidentsService {
                 signatures: data.signatures,
                 status: newStatus,
             },
-        });
-    }
-
-    async updateVisibleDamages(
-        accidentId: number,
-        userId: number,
-        dto: UpdateVisibleDamagesDto,
-    ) {
-        const accident = await this.prisma.accident.findUnique({
-            where: { id: accidentId },
-            include: { parties: true },
-        });
-        if (!accident) throw new NotFoundException('Accident not found');
-
-        const party = accident.parties.find(p => p.userId === userId);
-        if (!party) throw new ForbiddenException('You are not part of this accident');
-
-        const currentDamages = (accident.visibleDamages as any) || {};
-
-        const data: any = {};
-        if (party.role === 'A') {
-            data.visibleDamages = {
-                ...currentDamages,
-                vehicleA: dto.vehicleA ?? currentDamages.vehicleA,
-            };
-        } else {
-            data.visibleDamages = {
-                ...currentDamages,
-                vehicleB: dto.vehicleB ?? currentDamages.vehicleB,
-            };
-        }
-
-        return this.prisma.accident.update({
-            where: { id: accidentId },
-            data,
         });
     }
 }
