@@ -45,17 +45,31 @@ export class AuthService {
     async login(email: string, password: string) {
         const user = await this.validateUser(email, password);
 
-        const payload = { sub: user.id, email: user.email };
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            role: user.role
+        };
 
         const accessToken = await this.jwtService.signAsync(payload, {
+            secret: this.config.get<string>('JWT_SECRET'),
             expiresIn: this.config.get<string>('JWT_ACCESS_TTL'),
         });
 
         const refreshToken = await this.jwtService.signAsync(payload, {
+            secret: this.config.get<string>('JWT_SECRET'),
             expiresIn: this.config.get<string>('JWT_REFRESH_TTL'),
         });
 
-        return { accessToken, refreshToken };
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role
+            },
+        };
     }
 
     async refreshTokens(refreshToken: string) {

@@ -1,8 +1,17 @@
-import { Controller, Post, Get, Body, UseGuards, Req, Param, ParseIntPipe, Patch } from '@nestjs/common';
+import {
+    Controller,
+    Post,
+    Get,
+    Body,
+    UseGuards,
+    Req,
+    Param,
+    ParseIntPipe,
+    Patch,
+} from '@nestjs/common';
 import { AccidentsService } from './accidents.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateAccidentDto } from './dto/create-accident.dto';
-import { JoinAccidentDto } from './dto/join-accident.dto';
 import { UpdateAccidentPartyDto } from './dto/update-accident-party.dto';
 import { UpdateAccidentGeneralDto } from './dto/update-accident-general.dto';
 import { UpdateCircumstancesDto } from './dto/update-circumstances.dto';
@@ -21,35 +30,33 @@ export class AccidentsController {
     @Post()
     create(@Req() req, @Body() dto: CreateAccidentDto) {
         const userId = req.user.sub;
-        return this.accidentsService.create(userId, dto);
+        return this.accidentsService.create(userId, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Post(':id/qrsessions')
     createQrSession(@Req() req, @Param('id') id: string) {
         const userId = req.user.sub;
-        return this.accidentsService.createQrSession(userId, Number(id));
+        return this.accidentsService.createQrSession(userId, Number(id), req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Post('join')
     joinAccident(@Req() req, @Body('token') token: string) {
         const userId = req.user.sub;
-        return this.accidentsService.joinAccident(userId, token);
+        return this.accidentsService.joinAccident(userId, token, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Get()
     findAll(@Req() req) {
-        const userId = req.user.sub;
-        return this.accidentsService.findAllByUser(userId);
+        return this.accidentsService.findAllByUser(req.user.sub);
     }
 
     @UseGuards(JwtAuthGuard)
     @Get(':id')
     findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
-        const userId = req.user.sub;
-        return this.accidentsService.findOneByUser(userId, id);
+        return this.accidentsService.findOneByUser(req.user.sub, id);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -59,20 +66,19 @@ export class AccidentsController {
         @Param('id') id: string,
         @Body() dto: UpdateAccidentGeneralDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.updateGeneral(userId, +id, dto);
+        return this.accidentsService.updateGeneral(req.user.sub, +id, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id/party/A')
     updatePartyA(@Req() req, @Param('id') id: string, @Body() dto: UpdateAccidentPartyDto) {
-        return this.accidentsService.updateParty(req.user.sub, +id, 'A', dto);
+        return this.accidentsService.updateParty(req.user.sub, +id, 'A', dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id/party/B')
     updatePartyB(@Req() req, @Param('id') id: string, @Body() dto: UpdateAccidentPartyDto) {
-        return this.accidentsService.updateParty(req.user.sub, +id, 'B', dto);
+        return this.accidentsService.updateParty(req.user.sub, +id, 'B', dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -82,8 +88,7 @@ export class AccidentsController {
         @Param('id') id: string,
         @Body() dto: UpdateCircumstancesDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.updateCircumstances(+id, userId, dto);
+        return this.accidentsService.updateCircumstances(+id, req.user.sub, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -93,62 +98,56 @@ export class AccidentsController {
         @Param('id') id: string,
         @Body() dto: UpdateCollisionPointDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.updateCollisionPoint(+id, userId, dto);
+        return this.accidentsService.updateCollisionPoint(+id, req.user.sub, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id/witnesses')
     updateWitnesses(
-        @Param('id') id: string,
         @Req() req,
+        @Param('id') id: string,
         @Body() dto: UpdateWitnessesDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.updateWitnesses(+id, userId, dto);
+        return this.accidentsService.updateWitnesses(+id, req.user.sub, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id/observations')
     updateObservations(
-        @Param('id') id: string,
         @Req() req,
+        @Param('id') id: string,
         @Body() dto: UpdateObservationsDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.updateObservations(+id, userId, dto);
+        return this.accidentsService.updateObservations(+id, req.user.sub, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id/visible-damages')
-    async updateVisibleDamages(
-        @Param('id') id: string,
+    updateVisibleDamages(
         @Req() req,
+        @Param('id') id: string,
         @Body() dto: UpdateVisibleDamagesDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.updateVisibleDamages(Number(id), userId, dto);
+        return this.accidentsService.updateVisibleDamages(+id, req.user.sub, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id/sketch')
-    async updateSketch(
-        @Param('id') id: string,
+    updateSketch(
         @Req() req,
+        @Param('id') id: string,
         @Body() dto: UpdateSketchDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.updateSketch(Number(id), userId, dto);
+        return this.accidentsService.updateSketch(+id, req.user.sub, dto, req.ip);
     }
 
     @UseGuards(JwtAuthGuard)
     @Post(':id/sign')
-    async signAccident(
-        @Param('id') id: string,
+    signAccident(
         @Req() req,
+        @Param('id') id: string,
         @Body() dto: SignAccidentDto,
     ) {
-        const userId = req.user.sub;
-        return this.accidentsService.signAccident(Number(id), userId, dto);
+        return this.accidentsService.signAccident(+id, req.user.sub, dto, req.ip);
     }
 }

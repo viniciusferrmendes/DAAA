@@ -23,12 +23,18 @@ enum PartyRole {
   B
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   passwordHash String
   name         String
   contact      String?
+  role         UserRole @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -128,17 +134,34 @@ model QrSession {
   @@index([expiresAt])
 }
 
+enum AuditAction {
+  CREATE_ACCIDENT
+  UPDATE_GENERAL
+  UPDATE_PARTYA
+  UPDATE_PARTYB
+  UPDATE_CIRCUMSTANCES
+  UPDATE_COLLISION_POINT
+  UPDATE_VISIBLE_DAMAGES
+  UPDATE_WITNESSES
+  UPDATE_OBSERVATIONS
+  UPDATE_SIGNATURES
+  UPDATE_SKETCH
+  SIGN_PARTYA
+  SIGN_PARTYB
+  PDF_GENERATED
+  FINALIZED
+}
+
 model AuditLog {
-  id         Int        @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   accidentId Int?
   userId     Int?
   party      PartyRole?
-  action     String
-  block      String?
+  action     AuditAction
   ip         String?
   geoLat     Float?
   geoLng     Float?
-  ts         DateTime   @default(now())
+  ts         DateTime    @default(now())
 
   user     User?     @relation(fields: [userId], references: [id])
   accident Accident? @relation(fields: [accidentId], references: [id])
