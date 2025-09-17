@@ -37,4 +37,57 @@ export class AuditLogService {
             orderBy: { ts: 'desc' },
         });
     }
+
+    async findAll(params: {
+        skip?: number;
+        take?: number;
+        accidentId?: number;
+        userId?: number;
+        action?: string;
+        from?: string;
+        to?: string;
+    }) {
+        const { skip, take, accidentId, userId, action, from, to } = params;
+
+        const where: any = {};
+        if (accidentId) where.accidentId = accidentId;
+        if (userId) where.userId = userId;
+        if (action) where.action = action;
+
+        if (from || to) {
+            where.ts = {};
+            if (from) where.ts.gte = new Date(from);
+            if (to) where.ts.lte = new Date(to);
+        }
+
+        const [data, total] = await this.prisma.$transaction([
+            this.prisma.auditLog.findMany({
+                skip,
+                take,
+                where,
+                orderBy: { ts: 'desc' },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true
+                        }
+                    }
+                }
+            }),
+            this.prisma.auditLog.count({ where })
+        ]);
+
+        const currentPage = take ? Math.floor(skip! / take) + 1 : 1;
+        const totalPages = take ? Math.ceil(total / take) : 1;
+
+        return {
+            total,
+            pageSize: take,
+            currentPage,
+            totalPages,
+            data
+        };
+    }
 }
