@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { AuthModule } from './auth/auth.module';
 import { AccidentsModule } from './accidents/accidents.module';
+import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { AccidentsModule } from './accidents/accidents.module';
     UsersModule,
     VehiclesModule,
     AuthModule,
-    AccidentsModule
+    AccidentsModule,
+    PdfModule
   ],
   controllers: [AppController],
   providers: [AppService],

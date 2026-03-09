@@ -12,6 +12,7 @@ import { UpdateObservationsDto } from './dto/update-observations.dto';
 import { SignAccidentDto } from './dto/sign-accident.dto';
 import { UpdateVisibleDamagesDto } from './dto/update-visible-damages.dto';
 import { UpdateSketchDto } from './dto/update-sketch.dto';
+import { PdfService } from '../pdf/pdf.service'; { }
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class AccidentsService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly auditLogService: AuditLogService,
+        private readonly pdfService: PdfService,
     ) { }
 
     async create(userId: number, dto: CreateAccidentDto, ip?: string) {
@@ -41,7 +43,7 @@ export class AccidentsService {
             userId,
             party: PartyRole.A,
             action: AuditAction.CREATE_ACCIDENT,
-            ip,
+            ip
         });
 
         return accident;
@@ -529,11 +531,65 @@ export class AccidentsService {
             where: {
                 id,
                 parties: {
-                    some: { userId },
+                    some: { userId }
                 },
             },
-            include: { parties: true },
+            include: { parties: true }
         });
+    }
+
+    async finalizeAccident(accidentId: number, userId: number, ip?: string) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id: accidentId }
+        });
+
+        if (!accident) {
+            throw new NotFoundException('Accident not found');
+        }
+
+        const isParticipant = await this.prisma.accidentParty.findFirst({
+            where: {
+                accidentId,
+                userId,
+            }
+        });
+
+        if (!isParticipant) {
+            throw new ForbiddenException('You are not part of this accident');
+        }
+
+        if (accident.status !== 'signed_by_both') {
+            throw new BadRequestException(
+                'Accident must be signed by both parties before finalization'
+            );
+        }
+
+        const pdfResult = await this.pdfService.generateAccidentPdf(accidentId);
+
+        const updatedAccident = await this.prisma.accident.update({
+            where: { id: accidentId },
+            data: {
+                status: 'pdf_generated',
+                pdfUrl: pdfResult.pdfUrl,
+                pdfGeneratedAt: pdfResult.generatedAt
+            }
+        });
+
+        await this.auditLogService.logAction({
+            accidentId,
+            userId,
+            action: AuditAction.FINALIZED,
+            ip,
+        });
+
+        await this.auditLogService.logAction({
+            accidentId,
+            userId,
+            action: AuditAction.PDF_GENERATED,
+            ip,
+        });
+
+        return updatedAccident;
     }
 
 }

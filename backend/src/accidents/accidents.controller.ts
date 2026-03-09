@@ -150,4 +150,16 @@ export class AccidentsController {
     ) {
         return this.accidentsService.signAccident(+id, req.user.sub, dto, req.ip);
     }
+
+    @Post(':id/finalize')
+    @UseGuards(JwtAuthGuard)
+    async finalizeAccident(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: any,
+    ) {
+        const userId = req.user.sub;
+        const ip = req.ip;
+
+        return this.accidentsService.finalizeAccident(id, userId, ip);
+    }
 }
