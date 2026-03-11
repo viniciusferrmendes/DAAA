@@ -14,6 +14,8 @@ import { UpdateVisibleDamagesDto } from './dto/update-visible-damages.dto';
 import { UpdateSketchDto } from './dto/update-sketch.dto';
 import { PdfService } from '../pdf/pdf.service'; { }
 import * as crypto from 'crypto';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class AccidentsService {
@@ -590,6 +592,38 @@ export class AccidentsService {
         });
 
         return updatedAccident;
+    }
+
+    async getAccidentPdfPath(id: number, userId: number) {
+        const accident = await this.prisma.accident.findUnique({
+            where: { id },
+            include: { parties: true },
+        });
+
+        if (!accident) {
+            throw new NotFoundException('Accident not found');
+        }
+
+        const isParticipant = accident.parties.some(
+            (p) => p.userId === userId,
+        );
+
+        if (!isParticipant) {
+            throw new ForbiddenException('You are not part of this accident');
+        }
+
+        if (!accident.pdfUrl) {
+            throw new BadRequestException('PDF not generated yet');
+        }
+
+        const relativePath = accident.pdfUrl.replace(/^[/\\]/, '');
+        const absolutePath = path.resolve(process.cwd(), relativePath);
+
+        if (!fs.existsSync(absolutePath)) {
+            throw new NotFoundException('PDF file not found on disk');
+        }
+
+        return absolutePath;
     }
 
 }

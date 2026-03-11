@@ -5,6 +5,7 @@ import {
     Body,
     UseGuards,
     Req,
+    Res,
     Param,
     ParseIntPipe,
     Patch,
@@ -161,5 +162,18 @@ export class AccidentsController {
         const ip = req.ip;
 
         return this.accidentsService.finalizeAccident(id, userId, ip);
+    }
+
+    @Get(':id/pdf')
+    @UseGuards(JwtAuthGuard)
+    async downloadPdf(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: any,
+        @Res() res: any,
+    ) {
+        const userId = req.user.sub;
+        const filePath = await this.accidentsService.getAccidentPdfPath(id, userId);
+        
+        return res.download(filePath);
     }
 }
