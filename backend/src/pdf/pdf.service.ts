@@ -39,44 +39,58 @@ export class PdfService {
 
         const page = await browser.newPage();
 
-        const html = `
-        <html>
-        <body style="font-family: Arial; padding: 40px;">
+        const possiblePaths = [
+            path.join(__dirname, 'templates', 'accident-template.html'),
+            path.join(process.cwd(), 'dist', 'pdf', 'templates', 'accident-template.html'),
+            path.join(process.cwd(), 'src', 'pdf', 'templates', 'accident-template.html'),
+        ];
 
-            <h1>Declaração de Acidente</h1>
+        const templatePath = possiblePaths.find((filePath) => fs.existsSync(filePath));
 
-            <h2>Informações Gerais</h2>
-            <p><strong>Data/Hora:</strong> ${accident.dateTime ?? '-'}</p>
-            <p><strong>Local:</strong> ${accident.address ?? '-'}</p>
-            <p><strong>País:</strong> ${accident.country ?? '-'}</p>
+        if (!templatePath) {
+            throw new NotFoundException('PDF template not found');
+        }
 
-            <hr/>
+        let html = fs.readFileSync(templatePath, 'utf-8');
 
-            <h2>Condutor A</h2>
-            <p><strong>Nome:</strong> ${insuredA.name ?? '-'}</p>
-            <p><strong>Apelido:</strong> ${insuredA.surname ?? '-'}</p>
-            <p><strong>Veículo:</strong> ${vehicleA.brandModel ?? '-'}</p>
-            <p><strong>Matrícula:</strong> ${vehicleA.plate ?? '-'}</p>
-            <p><strong>Seguradora:</strong> ${insuranceA.insuranceCompany ?? '-'}</p>
+        const witnessesA = (accident.witnessesA as any[]) ?? [];
+        const witnessesB = (accident.witnessesB as any[]) ?? [];
 
-            <hr/>
+        const formatWitnesses = (list: any[]) => {
+            if (!list.length) {
+                return '<p>-</p>';
+            }
 
-            <h2>Condutor B</h2>
-            <p><strong>Nome:</strong> ${insuredB.name ?? '-'}</p>
-            <p><strong>Apelido:</strong> ${insuredB.surname ?? '-'}</p>
-            <p><strong>Veículo:</strong> ${vehicleB.brandModel ?? '-'}</p>
-            <p><strong>Matrícula:</strong> ${vehicleB.plate ?? '-'}</p>
-            <p><strong>Seguradora:</strong> ${insuranceB.insuranceCompany ?? '-'}</p>
+            return list
+                .map(
+                    (w) => `
+                <div class="witness-item">
+                    <span class="label">Nome:</span> ${w.name ?? '-'}<br>
+                    <span class="label">Morada:</span> ${w.address ?? '-'}<br>
+                    <span class="label">Contacto:</span> ${w.contact ?? '-'}
+                </div>
+            `,
+                )
+                .join('');
+        };
 
-            <hr/>
+        const witnessesAHtml = formatWitnesses(witnessesA);
+        const witnessesBHtml = formatWitnesses(witnessesB);
 
-            <h2>Observações</h2>
-            <p><strong>Veículo A:</strong> ${observations.vehicleA ?? '-'}</p>
-            <p><strong>Veículo B:</strong> ${observations.vehicleB ?? '-'}</p>
-
-        </body>
-        </html>
-        `;
+        html = html
+            .replace('{{date}}', accident.dateTime ? new Date(accident.dateTime).toLocaleString('pt-PT') : '-')
+            .replace('{{address}}', accident.address ?? '-')
+            .replace('{{country}}', accident.country ?? '-')
+            .replace('{{driverAName}}', `${insuredA.name ?? ''} ${insuredA.surname ?? ''}`.trim() || '-')
+            .replace('{{vehicleAModel}}', vehicleA.brandModel ?? '-')
+            .replace('{{vehicleAPlate}}', vehicleA.plate ?? '-')
+            .replace('{{driverBName}}', `${insuredB.name ?? ''} ${insuredB.surname ?? ''}`.trim() || '-')
+            .replace('{{vehicleBModel}}', vehicleB.brandModel ?? '-')
+            .replace('{{vehicleBPlate}}', vehicleB.plate ?? '-')
+            .replace('{{obsA}}', observations.vehicleA ?? '-')
+            .replace('{{obsB}}', observations.vehicleB ?? '-')
+            .replace('{{witnessesA}}', witnessesAHtml)
+            .replace('{{witnessesB}}', witnessesBHtml);
 
         await page.setContent(html, { waitUntil: 'networkidle0' });
 
