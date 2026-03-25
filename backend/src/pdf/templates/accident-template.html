@@ -7,30 +7,45 @@
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
-            padding: 20px;
+            padding: 24px;
+            background: #f9f9f9;
         }
 
         h1 {
             text-align: center;
+            margin-bottom: 30px;
         }
 
         h2 {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
         }
 
         .section {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
             margin-bottom: 20px;
         }
 
         .row {
             display: flex;
-            gap: 20px;
+            gap: 16px;
         }
 
         .column {
             flex: 1;
-            border: 1px solid #ccc;
-            padding: 10px;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 12px;
+        }
+
+        .field {
+            margin-bottom: 6px;
         }
 
         .label {
@@ -39,42 +54,93 @@
 
         .witness-item {
             margin-bottom: 8px;
+            padding: 6px;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .box {
+            border: 1px dashed #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            min-height: 40px;
+            background: #fff;
+        }
+
+        .signature-box {
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            background: #fff;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Declaração Amigável de Acidente</h1>
+    <h1>Declaração Amigável de Acidente Automóvel</h1>
 
     <div class="section">
-        <div><span class="label">Data:</span> {{date}}</div>
-        <div><span class="label">Local:</span> {{address}}</div>
-        <div><span class="label">País:</span> {{country}}</div>
+        <div class="field"><span class="label">Data:</span> {{date}}</div>
+        <div class="field"><span class="label">Local:</span> {{address}}</div>
+        <div class="field"><span class="label">País:</span> {{country}}</div>
     </div>
 
-    <div class="row">
-        <div class="column">
-            <h2>Veículo A</h2>
+    <div class="section">
+        <div class="row">
+            <div class="column">
+                <h2>Veículo A</h2>
 
-            <div><span class="label">Condutor:</span> {{driverAName}}</div>
-            <div><span class="label">Veículo:</span> {{vehicleAModel}}</div>
-            <div><span class="label">Matrícula:</span> {{vehicleAPlate}}</div>
-        </div>
+                <div class="field"><span class="label">Condutor:</span> {{driverAName}}</div>
+                <div class="field"><span class="label">Veículo:</span> {{vehicleAModel}}</div>
+                <div class="field"><span class="label">Matrícula:</span> {{vehicleAPlate}}</div>
+                <div class="field"><span class="label">Seguradora:</span> {{insuranceCompanyA}}</div>
+                <div class="field"><span class="label">Apólice:</span> {{insurancePolicyA}}</div>
+            </div>
 
-        <div class="column">
-            <h2>Veículo B</h2>
+            <div class="column">
+                <h2>Veículo B</h2>
 
-            <div><span class="label">Condutor:</span> {{driverBName}}</div>
-            <div><span class="label">Veículo:</span> {{vehicleBModel}}</div>
-            <div><span class="label">Matrícula:</span> {{vehicleBPlate}}</div>
+                <div class="field"><span class="label">Condutor:</span> {{driverBName}}</div>
+                <div class="field"><span class="label">Veículo:</span> {{vehicleBModel}}</div>
+                <div class="field"><span class="label">Matrícula:</span> {{vehicleBPlate}}</div>
+                <div class="field"><span class="label">Seguradora:</span> {{insuranceCompanyB}}</div>
+                <div class="field"><span class="label">Apólice:</span> {{insurancePolicyB}}</div>
+            </div>
         </div>
     </div>
 
     <div class="section">
         <h2>Observações</h2>
-        <div><span class="label">Veículo A:</span> {{obsA}}</div>
-        <div><span class="label">Veículo B:</span> {{obsB}}</div>
+
+        <div class="field">
+            <span class="label">Veículo A:</span>
+            <div class="box">{{obsA}}</div>
+        </div>
+
+        <div class="field">
+            <span class="label">Veículo B:</span>
+            <div class="box">{{obsB}}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Danos visíveis</h2>
+
+        <div class="row">
+            <div class="column">
+                <div class="label">Veículo A</div>
+                <div class="box">{{visibleDamagesA}}</div>
+            </div>
+
+            <div class="column">
+                <div class="label">Veículo B</div>
+                <div class="box">{{visibleDamagesB}}</div>
+            </div>
+        </div>
     </div>
 
     <div class="section">
@@ -85,6 +151,27 @@
     <div class="section">
         <h2>Testemunhas Veículo B</h2>
         {{witnessesB}}
+    </div>
+
+    <!-- NOVO BLOCO -->
+    <div class="section">
+        <h2>Assinaturas</h2>
+
+        <div class="row">
+            <div class="column">
+                <div class="label">Veículo A</div>
+                <div class="signature-box">
+                    {{signatureA}}
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="label">Veículo B</div>
+                <div class="signature-box">
+                    {{signatureB}}
+                </div>
+            </div>
+        </div>
     </div>
 
 </body>
