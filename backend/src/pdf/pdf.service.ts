@@ -23,6 +23,10 @@ export class PdfService {
         const visibleDamages = (accident.visibleDamages as any) ?? {};
         const observations = (accident.observations as any) ?? {};
         const signatures = (accident.signatures as any) ?? {};
+        const sketchUrl = accident.sketchUrl ?? null;
+        const sketchHtml = sketchUrl
+            ? `<img src="${sketchUrl}" alt="Croqui do acidente" style="max-width:100%; max-height:300px; object-fit:contain; display:block;" />`
+            : '<span>-</span>';
 
         // A
         const partyA = accident.parties.find(p => p.role === 'A');
@@ -125,7 +129,8 @@ export class PdfService {
             .replace(/{{obsB}}/g, observationB)
             .replace(/{{visibleDamagesB}}/g, visibleDamagesB)
             .replace(/{{witnessesB}}/g, witnessesBHtml)
-            .replace(/{{signatureB}}/g, signatureBHtml);
+            .replace(/{{signatureB}}/g, signatureBHtml)
+            .replace(/{{sketch}}/g, sketchHtml);
 
         await page.setContent(html, { waitUntil: 'networkidle0' });
 

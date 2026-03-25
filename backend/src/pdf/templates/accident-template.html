@@ -71,9 +71,19 @@
             border-radius: 4px;
             height: 100px;
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
-            padding-bottom: 10px;
+            background: #fff;
+        }
+
+        .sketch-box {
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
             background: #fff;
         }
     </style>
@@ -144,6 +154,13 @@
     </div>
 
     <div class="section">
+        <h2>Croqui do acidente</h2>
+        <div class="sketch-box">
+            {{sketch}}
+        </div>
+    </div>
+
+    <div class="section">
         <h2>Testemunhas Veículo A</h2>
         {{witnessesA}}
     </div>
@@ -153,7 +170,6 @@
         {{witnessesB}}
     </div>
 
-    <!-- NOVO BLOCO -->
     <div class="section">
         <h2>Assinaturas</h2>
 
