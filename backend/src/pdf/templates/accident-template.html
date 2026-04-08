@@ -87,6 +87,96 @@
             padding: 12px;
             box-sizing: border-box;
         }
+
+        .collision-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .car {
+            position: relative;
+            display: inline-block;
+            width: 90px;
+            height: auto;
+        }
+
+        .car-img {
+            display: block;
+            width: 90px;
+            height: auto;
+        }
+
+        .point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: transparent;
+            border-radius: 50%;
+        }
+
+        .point.active {
+            background: black;
+        }
+
+        .front {
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .front-left {
+            top: 10px;
+            left: 14px;
+        }
+
+        .front-right {
+            top: 10px;
+            right: 14px;
+        }
+
+        .left {
+            top: 50%;
+            left: 2px;
+            transform: translateY(-50%);
+        }
+
+        .right {
+            top: 50%;
+            right: 2px;
+            transform: translateY(-50%);
+        }
+
+        .rear-left {
+            bottom: 10px;
+            left: 14px;
+        }
+
+        .rear {
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .rear-right {
+            bottom: 10px;
+            right: 14px;
+        }
+
+        /* ponto ativo */
+        .active {
+            background: black;
+        }
+
+        .collision-wrapper {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .collision-block {
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -151,6 +241,42 @@
             <div class="column">
                 <h3>Ponto de colisão - Veículo B</h3>
                 <div class="box">{{collisionPointB}}</div>
+            </div>
+        </div>
+
+        <div class="collision-wrapper">
+            <div class="collision-block">
+                <div class="label">Veículo A</div>
+                <div class="car">
+                    <img src="{{carImage}}" class="car-img" />
+
+                    <div class="point front {{collisionA_front}}"></div>
+                    <div class="point front-left {{collisionA_front_left}}"></div>
+                    <div class="point front-right {{collisionA_front_right}}"></div>
+
+                    <div class="point left {{collisionA_left}}"></div>
+                    <div class="point right {{collisionA_right}}"></div>
+
+                    <div class="point rear-left {{collisionA_rear_left}}"></div>
+                    <div class="point rear {{collisionA_rear}}"></div>
+                    <div class="point rear-right {{collisionA_rear_right}}"></div>
+                </div>
+            </div>
+
+            <div class="collision-block">
+                <div class="label">Veículo B</div>
+                <div class="car">
+                    <div class="point front {{collisionB_front}}"></div>
+                    <div class="point front-left {{collisionB_front_left}}"></div>
+                    <div class="point front-right {{collisionB_front_right}}"></div>
+
+                    <div class="point left {{collisionB_left}}"></div>
+                    <div class="point right {{collisionB_right}}"></div>
+
+                    <div class="point rear-left {{collisionB_rear_left}}"></div>
+                    <div class="point rear {{collisionB_rear}}"></div>
+                    <div class="point rear-right {{collisionB_rear_right}}"></div>
+                </div>
             </div>
         </div>
 

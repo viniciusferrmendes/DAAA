@@ -119,6 +119,21 @@ export class PdfService {
         const observationA = observations.vehicleA ?? '-';
         const visibleDamagesA = visibleDamages.vehicleA ?? '-';
         const collisionPointA = collisionPointMap[collisionPoint.vehicleA] ?? '-';
+        const collisionA = collisionPoint.vehicleA;
+        function isActive(value: string, target: string) {
+            return value === target ? 'active' : '';
+        }
+        const possibleCarImagePaths = [
+            path.resolve(process.cwd(), 'dist/pdf/assets/car-top.png'),
+            path.resolve(process.cwd(), 'dist/src/pdf/assets/car-top.png'),
+            path.resolve(process.cwd(), 'src/pdf/assets/car-top.png'),
+        ];
+        const carImagePath = possibleCarImagePaths.find((filePath) => fs.existsSync(filePath));
+        if (!carImagePath) {
+            throw new Error('car-top.png not found in expected paths');
+        }
+
+        const carImageBase64 = fs.readFileSync(carImagePath).toString('base64');
         const signatureA = signatures.vehicleA ?? null;
         const signatureAHtml = signatureA
             ? `<img src="${signatureA}" alt="Assinatura Veículo A" style="max-height: 80px; max-width: 100%; object-fit: contain;" />`
@@ -152,6 +167,7 @@ export class PdfService {
         const observationB = observations.vehicleB ?? '-';
         const visibleDamagesB = visibleDamages.vehicleB ?? '-';
         const collisionPointB = collisionPointMap[collisionPoint.vehicleB] ?? '-';
+        const collisionB = collisionPoint.vehicleB;
         const signatureB = signatures.vehicleB ?? null;
         const signatureBHtml = signatureB
             ? `<img src="${signatureB}" alt="Assinatura Veículo B" style="max-height: 80px; max-width: 100%; object-fit: contain;" />`
@@ -227,7 +243,16 @@ export class PdfService {
 
             .replace(/{{obsA}}/g, observationA)
             .replace(/{{visibleDamagesA}}/g, visibleDamagesA)
-            .replace(/{{collisionPointA}}/g, collisionPointA)
+            .replace('{{collisionPointA}}', collisionPointA)
+            .replace('{{collisionA_front}}', isActive(collisionA, 'front'))
+            .replace('{{collisionA_front_left}}', isActive(collisionA, 'front-left'))
+            .replace('{{collisionA_front_right}}', isActive(collisionA, 'front-right'))
+            .replace('{{collisionA_left}}', isActive(collisionA, 'left'))
+            .replace('{{collisionA_right}}', isActive(collisionA, 'right'))
+            .replace('{{collisionA_rear_left}}', isActive(collisionA, 'rear-left'))
+            .replace('{{collisionA_rear}}', isActive(collisionA, 'rear'))
+            .replace('{{collisionA_rear_right}}', isActive(collisionA, 'rear-right'))
+            .replace('{{carImage}}', `data:image/png;base64,${carImageBase64}`)
             .replace(/{{witnessesA}}/g, witnessesAHtml)
             .replace(/{{signatureA}}/g, signatureAHtml)
 
@@ -252,11 +277,22 @@ export class PdfService {
             .replace(/{{obsB}}/g, observationB)
             .replace(/{{visibleDamagesB}}/g, visibleDamagesB)
             .replace(/{{collisionPointB}}/g, collisionPointB)
+            .replace('{{collisionB_front}}', isActive(collisionB, 'front'))
+            .replace('{{collisionB_front_left}}', isActive(collisionB, 'front-left'))
+            .replace('{{collisionB_front_right}}', isActive(collisionB, 'front-right'))
+            .replace('{{collisionB_left}}', isActive(collisionB, 'left'))
+            .replace('{{collisionB_right}}', isActive(collisionB, 'right'))
+            .replace('{{collisionB_rear_left}}', isActive(collisionB, 'rear-left'))
+            .replace('{{collisionB_rear}}', isActive(collisionB, 'rear'))
+            .replace('{{collisionB_rear_right}}', isActive(collisionB, 'rear-right'))
             .replace(/{{witnessesB}}/g, witnessesBHtml)
             .replace(/{{signatureB}}/g, signatureBHtml)
             .replace(/{{sketch}}/g, sketchHtml);
 
-        await page.setContent(html, { waitUntil: 'networkidle0' });
+        await page.setContent(html, {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+        });
 
         const pdfBuffer = await page.pdf({
             format: 'A4',
